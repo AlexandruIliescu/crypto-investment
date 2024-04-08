@@ -1,7 +1,7 @@
 package com.app.crypto.application.service.data_ingestion;
 
 import com.app.crypto.domain.model.CryptoPrice;
-import com.app.crypto.domain.port.CryptoDataIngestionPort;
+import com.app.crypto.domain.port.data_ingestion.CryptoDataIngestionPort;
 import com.app.crypto.exceptions.DuplicateCsvFileException;
 import com.app.crypto.infrastructure.web.dto.CryptoDataDTO;
 import org.apache.commons.codec.digest.DigestUtils;

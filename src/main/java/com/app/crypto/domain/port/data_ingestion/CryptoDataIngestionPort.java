@@ -1,4 +1,4 @@
-package com.app.crypto.domain.port;
+package com.app.crypto.domain.port.data_ingestion;
 
 import com.app.crypto.domain.model.CryptoPrice;
 

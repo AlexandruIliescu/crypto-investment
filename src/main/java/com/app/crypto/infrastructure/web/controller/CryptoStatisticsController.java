@@ -5,6 +5,8 @@ import com.app.crypto.domain.model.CryptoStatistics;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +26,9 @@ public class CryptoStatisticsController {
     }
 
     @GetMapping
-    public ResponseEntity<CryptoStatistics> getCryptoStatistics(@Valid @RequestParam String symbol,
-                                                                @Min(1900) Integer year,
-                                                                @Min(1) @Max(12) Integer month) {
-        return ResponseEntity.ok(statisticsService.getCryptoStatistics(symbol, year, month));
+    public ResponseEntity<CryptoStatistics> getCryptoMinMax(@Valid @RequestParam @NotNull String symbol,
+                                                            @Min(1900) @NotNull Integer year,
+                                                            @Min(1) @Max(12) @NotNull Integer month) {
+        return ResponseEntity.ok(statisticsService.getCryptoMinMax(symbol, year, month));
     }
 }

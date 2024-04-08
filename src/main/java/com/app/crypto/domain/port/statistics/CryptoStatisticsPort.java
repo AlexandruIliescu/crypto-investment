@@ -1,8 +1,8 @@
-package com.app.crypto.application.service.statistics;
+package com.app.crypto.domain.port.statistics;
 
 import com.app.crypto.domain.model.CryptoStatistics;
 
-public interface CryptoStatisticsService {
+public interface CryptoStatisticsPort {
 
     CryptoStatistics getCryptoMinMax(String symbol, int year, int month);
 }
