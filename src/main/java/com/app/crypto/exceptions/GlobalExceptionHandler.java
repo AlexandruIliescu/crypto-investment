@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(Map.of("message", exception.getMessage()));
     }
 
+
+    @ExceptionHandler(IngestCryptoDataException.class)
+    public ResponseEntity<Object> handleIngestCryptoData(IngestCryptoDataException exception) {
+        log.error("IngestCryptoDataException: {}", exception.getMessage());
+        return ResponseEntity.status(BAD_REQUEST).body(Map.of("message", exception.getMessage()));
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();

@@ -3,7 +3,9 @@ package com.app.crypto.application.service.data_ingestion;
 import com.app.crypto.domain.model.CryptoPrice;
 import com.app.crypto.domain.port.data_ingestion.CryptoDataIngestionPort;
 import com.app.crypto.exceptions.DuplicateCsvFileException;
+import com.app.crypto.exceptions.IngestCryptoDataException;
 import com.app.crypto.infrastructure.web.dto.CryptoDataDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -20,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class CryptoDataIngestionServiceImpl implements CryptoDataIngestionService {
 
@@ -45,7 +48,8 @@ public class CryptoDataIngestionServiceImpl implements CryptoDataIngestionServic
                 cryptoDataIngestionPort.saveFileChecksum(checksum);
             }
         } catch (IOException e) {
-            // Handle read errors
+            log.error("Ingest crypto data failed: " + e.getMessage());
+            throw new IngestCryptoDataException("Ingest crypto data failed for the current file.");
         }
     }
 
