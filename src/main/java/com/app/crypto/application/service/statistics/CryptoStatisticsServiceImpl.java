@@ -1,10 +1,13 @@
 package com.app.crypto.application.service.statistics;
 
+import com.app.crypto.domain.model.CryptoNormalizedRange;
 import com.app.crypto.domain.model.CryptoRange;
 import com.app.crypto.domain.model.CryptoStatistics;
+import com.app.crypto.domain.model.CryptoValueStatistics;
 import com.app.crypto.domain.port.statistics.CryptoStatisticsPort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,7 +25,17 @@ public class CryptoStatisticsServiceImpl implements CryptoStatisticsService {
     }
 
     @Override
-    public List<CryptoRange> findCryptoRanges() {
-        return cryptoStatisticsPort.findCryptoRanges();
+    public List<CryptoRange> getCryptoRanges() {
+        return cryptoStatisticsPort.getCryptoRanges();
+    }
+
+    @Override
+    public CryptoValueStatistics getCryptoValueStatistics(String symbol) {
+        return cryptoStatisticsPort.getCryptoValueStatistics(symbol);
+    }
+
+    @Override
+    public CryptoNormalizedRange getHighestNormalizedRangeCrypto(LocalDate date) {
+        return cryptoStatisticsPort.getHighestNormalizedRangeCrypto(date);
     }
 }

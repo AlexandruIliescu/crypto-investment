@@ -1,7 +1,9 @@
 package com.app.crypto.domain.port.statistics;
 
+import com.app.crypto.domain.model.CryptoNormalizedRange;
 import com.app.crypto.domain.model.CryptoRange;
 import com.app.crypto.domain.model.CryptoStatistics;
+import com.app.crypto.domain.model.CryptoValueStatistics;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceEntity;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,7 +18,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
@@ -29,42 +30,91 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
 
     @Override
     public CryptoStatistics getCryptoMinMax(String symbol, int year, int month) {
-        ZoneId utcZoneId = ZoneId.of("UTC");
-        LocalDate startOfMonthLocalDate = LocalDate.of(year, month, 1);
-        ZonedDateTime startOfMonthZdt = startOfMonthLocalDate.atStartOfDay(utcZoneId);
-        Instant startOfMonthInstant = startOfMonthZdt.toInstant();
-        LocalDate endOfMonthLocalDate = startOfMonthLocalDate.with(TemporalAdjusters.lastDayOfMonth());
-        ZonedDateTime endOfMonthZdt = endOfMonthLocalDate.atTime(23, 59, 59, 999999999).atZone(utcZoneId);
-        Instant endOfMonthInstant = endOfMonthZdt.toInstant();
+        Instant startOfMonthInstant = getStartOfMonthInstant(year, month);
+        Instant endOfMonthInstant = getEndOfMonthInstant(year, month);
 
-        Optional<BigDecimal> minPriceOpt = cryptoPriceRepository.findMinPriceBySymbolAndMonth(symbol, startOfMonthInstant, endOfMonthInstant);
-        Optional<BigDecimal> maxPriceOpt = cryptoPriceRepository.findMaxPriceBySymbolAndMonth(symbol, startOfMonthInstant, endOfMonthInstant);
+        BigDecimal minPrice = getMinPrice(symbol, startOfMonthInstant, endOfMonthInstant);
+        BigDecimal maxPrice = getMaxPrice(symbol, startOfMonthInstant, endOfMonthInstant);
+        Instant oldestTimestamp = getOldestTimestamp(symbol, startOfMonthInstant, endOfMonthInstant);
+        Instant newestTimestamp = getNewestTimestamp(symbol, startOfMonthInstant, endOfMonthInstant);
 
-        // Fetching oldest and newest prices with a single query
-        List<CryptoPriceEntity> oldestAndNewestPrices = cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, startOfMonthInstant, endOfMonthInstant, PageRequest.of(0, 2, Sort.by("timestamp").ascending()));
-
-        if (minPriceOpt.isEmpty() || maxPriceOpt.isEmpty() || oldestAndNewestPrices.size() < 2) {
-            throw new EntityNotFoundException("No price data found for " + symbol + " in " + year + "-" + month);
-        }
-
-        BigDecimal minPrice = minPriceOpt.orElseThrow(() -> new EntityNotFoundException("Minimum price not found"));
-        BigDecimal maxPrice = maxPriceOpt.orElseThrow(() -> new EntityNotFoundException("Maximum price not found"));
-
-        CryptoStatistics statistics = new CryptoStatistics();
-        statistics.setMinPrice(minPrice);
-        statistics.setMaxPrice(maxPrice);
-        statistics.setOldestTimestamp(oldestAndNewestPrices.get(0).getTimestamp());
-        statistics.setNewestTimestamp(oldestAndNewestPrices.get(1).getTimestamp());
-
-        return statistics;
+        return CryptoStatistics.builder()
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .oldestTimestamp(oldestTimestamp)
+                .newestTimestamp(newestTimestamp)
+                .build();
     }
 
     @Override
-    public List<CryptoRange> findCryptoRanges() {
+    public List<CryptoRange> getCryptoRanges() {
         List<Object[]> minMaxPrices = cryptoPriceRepository.findMinMaxPricesForAllCryptos();
         return minMaxPrices.stream()
                 .map(obj -> new CryptoRange((String) obj[0], (BigDecimal) obj[1], (BigDecimal) obj[2]))
                 .sorted((o1, o2) -> o2.getNormalizedRange().compareTo(o1.getNormalizedRange()))
                 .toList();
+    }
+
+    @Override
+    public CryptoValueStatistics getCryptoValueStatistics(String symbol) {
+        BigDecimal minPrice = cryptoPriceRepository.findGlobalMinPriceBySymbol(symbol)
+                .orElseThrow(() -> new EntityNotFoundException("Min price not found for symbol: " + symbol));
+        BigDecimal maxPrice = cryptoPriceRepository.findGlobalMaxPriceBySymbol(symbol)
+                .orElseThrow(() -> new EntityNotFoundException("Max price not found for symbol: " + symbol));
+        Instant oldestTimestamp = cryptoPriceRepository.findOldestTimestampBySymbol(symbol)
+                .orElseThrow(() -> new EntityNotFoundException("Oldest timestamp not found for symbol: " + symbol));
+        Instant newestTimestamp = cryptoPriceRepository.findNewestTimestampBySymbol(symbol)
+                .orElseThrow(() -> new EntityNotFoundException("Newest timestamp not found for symbol: " + symbol));
+
+        return new CryptoValueStatistics(oldestTimestamp, newestTimestamp, minPrice, maxPrice);
+    }
+
+    @Override
+    public CryptoNormalizedRange getHighestNormalizedRangeCrypto(LocalDate date) {
+        List<Object[]> minMaxPrices = cryptoPriceRepository.findMinMaxPricesForDate(date);
+        return minMaxPrices.stream()
+                .map(obj -> new CryptoNormalizedRange(
+                        (String) obj[0],
+                        ((BigDecimal) obj[2]).subtract((BigDecimal) obj[1]).divide((BigDecimal) obj[1], BigDecimal.ROUND_HALF_UP)))
+                .max((o1, o2) -> o1.getNormalizedRange().compareTo(o2.getNormalizedRange()))
+                .orElseThrow(() -> new EntityNotFoundException("No data found for date: " + date));
+    }
+
+    private Instant getStartOfMonthInstant(int year, int month) {
+        LocalDate startOfMonthLocalDate = LocalDate.of(year, month, 1);
+        ZonedDateTime startOfMonthZdt = startOfMonthLocalDate.atStartOfDay(ZoneId.of("UTC"));
+        return startOfMonthZdt.toInstant();
+    }
+
+    private Instant getEndOfMonthInstant(int year, int month) {
+        LocalDate endOfMonthLocalDate = LocalDate.of(year, month, 1).with(TemporalAdjusters.lastDayOfMonth());
+        ZonedDateTime endOfMonthZdt = endOfMonthLocalDate.atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
+        return endOfMonthZdt.toInstant();
+    }
+
+    private BigDecimal getMinPrice(String symbol, Instant start, Instant end) {
+        return cryptoPriceRepository.findMinPriceBySymbolAndMonth(symbol, start, end)
+                .orElseThrow(() -> new EntityNotFoundException("Minimum price not found for " + symbol));
+    }
+
+    private BigDecimal getMaxPrice(String symbol, Instant start, Instant end) {
+        return cryptoPriceRepository.findMaxPriceBySymbolAndMonth(symbol, start, end)
+                .orElseThrow(() -> new EntityNotFoundException("Maximum price not found for " + symbol));
+    }
+
+    private Instant getOldestTimestamp(String symbol, Instant start, Instant end) {
+        return cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, start, end, PageRequest.of(0, 1, Sort.by("timestamp").ascending()))
+                .stream()
+                .findFirst()
+                .map(CryptoPriceEntity::getTimestamp)
+                .orElseThrow(() -> new EntityNotFoundException("Oldest price not found for " + symbol));
+    }
+
+    private Instant getNewestTimestamp(String symbol, Instant start, Instant end) {
+        return cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, start, end, PageRequest.of(0, 1, Sort.by("timestamp").descending()))
+                .stream()
+                .findFirst()
+                .map(CryptoPriceEntity::getTimestamp)
+                .orElseThrow(() -> new EntityNotFoundException("Newest price not found for " + symbol));
     }
 }

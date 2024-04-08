@@ -1,19 +1,20 @@
 package com.app.crypto.infrastructure.web.controller;
 
 import com.app.crypto.application.service.statistics.CryptoStatisticsService;
+import com.app.crypto.domain.model.CryptoNormalizedRange;
 import com.app.crypto.domain.model.CryptoRange;
 import com.app.crypto.domain.model.CryptoStatistics;
+import com.app.crypto.domain.model.CryptoValueStatistics;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Validated
@@ -36,7 +37,16 @@ public class CryptoStatisticsController {
 
     @GetMapping("/ranges")
     public ResponseEntity<List<CryptoRange>> getCryptoRanges() {
-        List<CryptoRange> ranges = cryptoStatisticsService.findCryptoRanges();
-        return ResponseEntity.ok(ranges);
+        return ResponseEntity.ok(cryptoStatisticsService.getCryptoRanges());
+    }
+
+    @GetMapping("/{symbol}/values")
+    public ResponseEntity<CryptoValueStatistics> getCryptoValueStatistics(@PathVariable String symbol) {
+        return ResponseEntity.ok(cryptoStatisticsService.getCryptoValueStatistics(symbol));
+    }
+
+    @GetMapping("/highest-normalized-range")
+    public ResponseEntity<CryptoNormalizedRange> getHighestNormalizedRangeCrypto(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(cryptoStatisticsService.getHighestNormalizedRangeCrypto(date));
     }
 }
