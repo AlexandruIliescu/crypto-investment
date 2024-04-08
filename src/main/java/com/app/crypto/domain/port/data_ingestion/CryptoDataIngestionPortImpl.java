@@ -47,6 +47,12 @@ public class CryptoDataIngestionPortImpl implements CryptoDataIngestionPort {
         log.info("Checksum was saved successfully.");
     }
 
+    /**
+     * Converts a {@link CryptoPrice} domain model to a {@link CryptoPriceEntity}.
+     *
+     * @param cryptoPrice The {@link CryptoPrice} domain model to convert.
+     * @return The converted {@link CryptoPriceEntity}.
+     */
     private CryptoPriceEntity convertToEntity(CryptoPrice cryptoPrice) {
         CryptoPriceEntity entity = new CryptoPriceEntity();
         entity.setTimestamp(cryptoPrice.getTimestamp());

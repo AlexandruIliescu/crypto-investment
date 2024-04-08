@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 @Slf4j
 @RestControllerAdvice
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateCsvFileException.class)
     public ResponseEntity<Object> handleDuplicatedCsvFile(DuplicateCsvFileException exception) {
         log.error("DuplicatedCsvFileException: {}", exception.getMessage());
-        return ResponseEntity.status(BAD_REQUEST).body(Map.of("message", exception.getMessage()));
+        return ResponseEntity.status(CONFLICT).body(Map.of("message", exception.getMessage()));
     }
 
 

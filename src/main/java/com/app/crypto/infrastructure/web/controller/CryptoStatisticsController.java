@@ -29,6 +29,7 @@ public class CryptoStatisticsController {
         this.cryptoStatisticsService = cryptoStatisticsService;
     }
 
+    @Operation(description = "Returns minimum, maximum, oldest, and newest prices for a specified cryptocurrency symbol within a given month and year.")
     @GetMapping
     public ResponseEntity<CryptoStatistics> getCryptoMinMax(@Valid @RequestParam @NotNull String symbol,
                                                             @Min(1900) @NotNull Integer year,
@@ -36,17 +37,19 @@ public class CryptoStatisticsController {
         return ResponseEntity.ok(cryptoStatisticsService.getCryptoMinMax(symbol, year, month));
     }
 
+    @Operation(description = "Returns a list of all cryptocurrencies along with their normalized ranges (i.e., (max-min)/min).")
     @GetMapping("/ranges")
     public ResponseEntity<List<CryptoRange>> getCryptoRanges() {
         return ResponseEntity.ok(cryptoStatisticsService.getCryptoRanges());
     }
 
+    @Operation(description = "Returns value statistics including oldest, newest, minimum, and maximum prices for a specified cryptocurrency symbol.")
     @GetMapping("/{symbol}/values")
     public ResponseEntity<CryptoValueStatistics> getCryptoValueStatistics(@PathVariable String symbol) {
         return ResponseEntity.ok(cryptoStatisticsService.getCryptoValueStatistics(symbol));
     }
 
-    @Operation
+    @Operation(description = "Returns the cryptocurrency that had the highest normalized range ((max-min)/min) on a specific date.")
     @GetMapping("/highest-normalized-range")
     public ResponseEntity<CryptoNormalizedRange> getHighestNormalizedRangeCrypto(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(cryptoStatisticsService.getHighestNormalizedRangeCrypto(date));

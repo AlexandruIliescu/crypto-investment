@@ -78,28 +78,66 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
                 .orElseThrow(() -> new EntityNotFoundException("No data found for date: " + date));
     }
 
+    /**
+     * Calculates the start of a month in UTC based on a given year and month.
+     *
+     * @param year The year of interest.
+     * @param month The month of interest.
+     * @return The {@link Instant} representing the start of the specified month.
+     */
     private Instant getStartOfMonthInstant(int year, int month) {
         LocalDate startOfMonthLocalDate = LocalDate.of(year, month, 1);
         ZonedDateTime startOfMonthZdt = startOfMonthLocalDate.atStartOfDay(ZoneId.of("UTC"));
         return startOfMonthZdt.toInstant();
     }
 
+    /**
+     * Calculates the end of a month in UTC based on a given year and month.
+     *
+     * @param year The year of interest.
+     * @param month The month of interest.
+     * @return The {@link Instant} representing the end of the specified month.
+     */
     private Instant getEndOfMonthInstant(int year, int month) {
         LocalDate endOfMonthLocalDate = LocalDate.of(year, month, 1).with(TemporalAdjusters.lastDayOfMonth());
         ZonedDateTime endOfMonthZdt = endOfMonthLocalDate.atTime(23, 59, 59, 999999999).atZone(ZoneId.of("UTC"));
         return endOfMonthZdt.toInstant();
     }
 
+    /**
+     * Retrieves the minimum price of a cryptocurrency between two timestamps.
+     *
+     * @param symbol The symbol of the cryptocurrency.
+     * @param start The start timestamp.
+     * @param end The end timestamp.
+     * @return The minimum price as a {@link BigDecimal}.
+     */
     private BigDecimal getMinPrice(String symbol, Instant start, Instant end) {
         return cryptoPriceRepository.findMinPriceBySymbolAndMonth(symbol, start, end)
                 .orElseThrow(() -> new EntityNotFoundException("Minimum price not found for " + symbol));
     }
 
+    /**
+     * Retrieves the maximum price of a cryptocurrency between two timestamps.
+     *
+     * @param symbol The symbol of the cryptocurrency.
+     * @param start The start timestamp.
+     * @param end The end timestamp.
+     * @return The maximum price as a {@link BigDecimal}.
+     */
     private BigDecimal getMaxPrice(String symbol, Instant start, Instant end) {
         return cryptoPriceRepository.findMaxPriceBySymbolAndMonth(symbol, start, end)
                 .orElseThrow(() -> new EntityNotFoundException("Maximum price not found for " + symbol));
     }
 
+    /**
+     * Retrieves the oldest timestamp for a cryptocurrency between two timestamps.
+     *
+     * @param symbol The symbol of the cryptocurrency.
+     * @param start The start timestamp.
+     * @param end The end timestamp.
+     * @return The oldest timestamp as an {@link Instant}.
+     */
     private Instant getOldestTimestamp(String symbol, Instant start, Instant end) {
         return cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, start, end, PageRequest.of(0, 1, Sort.by("timestamp").ascending()))
                 .stream()
@@ -108,6 +146,14 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
                 .orElseThrow(() -> new EntityNotFoundException("Oldest price not found for " + symbol));
     }
 
+    /**
+     * Retrieves the newest timestamp for a cryptocurrency between two timestamps.
+     *
+     * @param symbol The symbol of the cryptocurrency.
+     * @param start The start timestamp.
+     * @param end The end timestamp.
+     * @return The newest timestamp as an {@link Instant}.
+     */
     private Instant getNewestTimestamp(String symbol, Instant start, Instant end) {
         return cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, start, end, PageRequest.of(0, 1, Sort.by("timestamp").descending()))
                 .stream()

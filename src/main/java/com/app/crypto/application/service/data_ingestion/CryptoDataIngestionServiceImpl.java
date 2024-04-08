@@ -53,6 +53,15 @@ public class CryptoDataIngestionServiceImpl implements CryptoDataIngestionServic
         }
     }
 
+    /**
+     * Parses the given CSV file to extract cryptocurrency data.
+     * The method reads the CSV file line by line, extracts the cryptocurrency data into {@link CryptoDataDTO} objects,
+     * and collects them into a list.
+     *
+     * @param file the CSV file to be parsed
+     * @return a list of {@link CryptoDataDTO} objects containing the extracted data
+     * @throws IOException if an error occurs during file reading or parsing
+     */
     private List<CryptoDataDTO> parseCsvFile(MultipartFile file) throws IOException {
         List<CryptoDataDTO> cryptoDataList = new ArrayList<>();
         try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
@@ -72,6 +81,13 @@ public class CryptoDataIngestionServiceImpl implements CryptoDataIngestionServic
         return cryptoDataList;
     }
 
+    /**
+     * Converts a list of {@link CryptoDataDTO} objects into a list of {@link CryptoPrice} domain models.
+     * Each {@link CryptoDataDTO} is transformed into a {@link CryptoPrice} object with corresponding attributes.
+     *
+     * @param cryptoDataList the list of {@link CryptoDataDTO} objects to be converted
+     * @return a list of {@link CryptoPrice} domain models
+     */
     private List<CryptoPrice> convertToDomainModels(List<CryptoDataDTO> cryptoDataList) {
         return cryptoDataList.stream().map(dto -> {
             CryptoPrice cryptoPrice = new CryptoPrice();
