@@ -1,5 +1,6 @@
 package com.app.crypto.domain.port.statistics;
 
+import com.app.crypto.domain.model.CryptoRange;
 import com.app.crypto.domain.model.CryptoStatistics;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceEntity;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceRepository;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CryptoStatisticsPortImpl implements CryptoStatisticsPort{
+public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
 
     private final CryptoPriceRepository cryptoPriceRepository;
 
@@ -40,9 +41,7 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort{
         Optional<BigDecimal> maxPriceOpt = cryptoPriceRepository.findMaxPriceBySymbolAndMonth(symbol, startOfMonthInstant, endOfMonthInstant);
 
         // Fetching oldest and newest prices with a single query
-        List<CryptoPriceEntity> oldestAndNewestPrices = cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(
-                symbol, startOfMonthInstant, endOfMonthInstant, PageRequest.of(0, 2, Sort.by("timestamp").ascending())
-        );
+        List<CryptoPriceEntity> oldestAndNewestPrices = cryptoPriceRepository.findOldestAndNewestBySymbolAndMonth(symbol, startOfMonthInstant, endOfMonthInstant, PageRequest.of(0, 2, Sort.by("timestamp").ascending()));
 
         if (minPriceOpt.isEmpty() || maxPriceOpt.isEmpty() || oldestAndNewestPrices.size() < 2) {
             throw new EntityNotFoundException("No price data found for " + symbol + " in " + year + "-" + month);
@@ -58,5 +57,14 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort{
         statistics.setNewestTimestamp(oldestAndNewestPrices.get(1).getTimestamp());
 
         return statistics;
+    }
+
+    @Override
+    public List<CryptoRange> findCryptoRanges() {
+        List<Object[]> minMaxPrices = cryptoPriceRepository.findMinMaxPricesForAllCryptos();
+        return minMaxPrices.stream()
+                .map(obj -> new CryptoRange((String) obj[0], (BigDecimal) obj[1], (BigDecimal) obj[2]))
+                .sorted((o1, o2) -> o2.getNormalizedRange().compareTo(o1.getNormalizedRange()))
+                .toList();
     }
 }

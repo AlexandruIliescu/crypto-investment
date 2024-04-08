@@ -22,4 +22,8 @@ public interface CryptoPriceRepository extends JpaRepository<CryptoPriceEntity, 
     @Query("SELECT c FROM CryptoPriceEntity c WHERE c.symbol = :symbol AND c.timestamp BETWEEN :startOfMonth AND :endOfMonth " +
             "ORDER BY c.timestamp ASC, c.timestamp DESC")
     List<CryptoPriceEntity> findOldestAndNewestBySymbolAndMonth(String symbol, Instant startOfMonth, Instant endOfMonth, Pageable pageable);
+
+    @Query(value = "SELECT symbol, MAX(price) as maxPrice, MIN(price) as minPrice " +
+            "FROM crypto_prices GROUP BY symbol", nativeQuery = true)
+    List<Object[]> findMinMaxPricesForAllCryptos();
 }
