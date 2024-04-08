@@ -7,6 +7,7 @@ import com.app.crypto.domain.model.CryptoValueStatistics;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceEntity;
 import com.app.crypto.infrastructure.persistence.price.CryptoPriceRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+@Slf4j
 @Service
 public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
 
@@ -57,14 +59,10 @@ public class CryptoStatisticsPortImpl implements CryptoStatisticsPort {
 
     @Override
     public CryptoValueStatistics getCryptoValueStatistics(String symbol) {
-        BigDecimal minPrice = cryptoPriceRepository.findGlobalMinPriceBySymbol(symbol)
-                .orElseThrow(() -> new EntityNotFoundException("Min price not found for symbol: " + symbol));
-        BigDecimal maxPrice = cryptoPriceRepository.findGlobalMaxPriceBySymbol(symbol)
-                .orElseThrow(() -> new EntityNotFoundException("Max price not found for symbol: " + symbol));
-        Instant oldestTimestamp = cryptoPriceRepository.findOldestTimestampBySymbol(symbol)
-                .orElseThrow(() -> new EntityNotFoundException("Oldest timestamp not found for symbol: " + symbol));
-        Instant newestTimestamp = cryptoPriceRepository.findNewestTimestampBySymbol(symbol)
-                .orElseThrow(() -> new EntityNotFoundException("Newest timestamp not found for symbol: " + symbol));
+        BigDecimal minPrice = cryptoPriceRepository.findGlobalMinPriceBySymbol(symbol).orElseThrow(() -> new EntityNotFoundException("Min price not found for symbol: " + symbol));
+        BigDecimal maxPrice = cryptoPriceRepository.findGlobalMaxPriceBySymbol(symbol).orElseThrow(() -> new EntityNotFoundException("Max price not found for symbol: " + symbol));
+        Instant oldestTimestamp = cryptoPriceRepository.findOldestTimestampBySymbol(symbol).orElseThrow(() -> new EntityNotFoundException("Oldest timestamp not found for symbol: " + symbol));
+        Instant newestTimestamp = cryptoPriceRepository.findNewestTimestampBySymbol(symbol).orElseThrow(() -> new EntityNotFoundException("Newest timestamp not found for symbol: " + symbol));
 
         return new CryptoValueStatistics(oldestTimestamp, newestTimestamp, minPrice, maxPrice);
     }

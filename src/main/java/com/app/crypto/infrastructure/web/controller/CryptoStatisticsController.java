@@ -5,6 +5,7 @@ import com.app.crypto.domain.model.CryptoNormalizedRange;
 import com.app.crypto.domain.model.CryptoRange;
 import com.app.crypto.domain.model.CryptoStatistics;
 import com.app.crypto.domain.model.CryptoValueStatistics;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -45,6 +46,7 @@ public class CryptoStatisticsController {
         return ResponseEntity.ok(cryptoStatisticsService.getCryptoValueStatistics(symbol));
     }
 
+    @Operation
     @GetMapping("/highest-normalized-range")
     public ResponseEntity<CryptoNormalizedRange> getHighestNormalizedRangeCrypto(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(cryptoStatisticsService.getHighestNormalizedRangeCrypto(date));
