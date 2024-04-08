@@ -1,4 +1,4 @@
-# Java Jokes Microservice
+# Crypto Investment Application
 ## Description
 The Crypto Investment Application is a comprehensive Spring Boot-based RESTful API designed for cryptocurrency data ingestion and analysis. It allows for the ingestion of cryptocurrency data from CSV files, and provides statistical analysis of the data, including normalized range calculations, and min, max, oldest, and newest value statistics for specified cryptocurrencies. Built with a hexagonal architecture, the application emphasizes maintainability and testability, supported by a suite of unit and integration tests for robust service and port validation.
 
